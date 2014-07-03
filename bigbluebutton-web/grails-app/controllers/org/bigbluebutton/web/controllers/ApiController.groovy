@@ -23,6 +23,7 @@ import java.text.MessageFormat;
 import java.util.Collections;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.Predicate
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -39,6 +40,7 @@ import org.bigbluebutton.api.ApiErrors;
 import org.bigbluebutton.api.ParamsProcessorUtil;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentMap
 import java.util.ArrayList;
 import java.text.DateFormat;
 import org.bigbluebutton.api.Util;
@@ -242,22 +244,22 @@ class ApiController {
 	   return;
     }
 
-	// the createTime mismatch with meeting's createTime, complain
-	// In the future, the createTime param will be required
-	if (params.createTime != null){
-		long createTime = 0;
-		try{
-			createTime=Long.parseLong(params.createTime);
-		}catch(Exception e){
-			log.warn("could not parse createTime param");
-			createTime = -1;
-		}
-		if(createTime != meeting.getCreateTime()){
-			errors.mismatchCreateTimeParam();
-			respondWithErrors(errors);
-			return;
-		}
-	}
+    // the createTime mismatch with meeting's createTime, complain
+    // In the future, the createTime param will be required
+    if (params.createTime != null){
+        long createTime = 0;
+        try {
+                createTime=Long.parseLong(params.createTime);
+        } catch(Exception e) {
+                log.warn("could not parse createTime param");
+                createTime = -1;
+        }
+        if(createTime != meeting.getCreateTime()){
+                errors.mismatchCreateTimeParam();
+                respondWithErrors(errors);
+                return;
+        }
+    }
     
     // Is this user joining a meeting that has been ended. If so, complain.
     if (meeting.isForciblyEnded()) {
@@ -266,17 +268,17 @@ class ApiController {
 		return;
 		// END - backward compatibility
 		
-      errors.meetingForciblyEndedError();
-      respondWithErrors(errors)
-      return;
+        errors.meetingForciblyEndedError();
+        respondWithErrors(errors)
+        return;
     }
 
     // Now determine if this user is a moderator or a viewer.
     String role = null;
     if (meeting.getModeratorPassword().equals(attPW)) {
-      role = ROLE_MODERATOR;
+        role = ROLE_MODERATOR;
     } else if (meeting.getViewerPassword().equals(attPW)) {
-      role = ROLE_ATTENDEE;
+        role = ROLE_ATTENDEE;
     }
     
     if (role == null) {
@@ -286,56 +288,58 @@ class ApiController {
 		// END - backward compatibility
 		
     	errors.invalidPasswordError()
-	    respondWithErrors(errors)
-	    return;
+        respondWithErrors(errors)
+        return;
     }
 	
-	String webVoice = StringUtils.isEmpty(params.webVoiceConf) ? meeting.getTelVoice() : params.webVoiceConf
+    String webVoice = StringUtils.isEmpty(params.webVoiceConf) ? meeting.getTelVoice() : params.webVoiceConf
 
     boolean redirectImm = parseBoolean(params.redirectImmediately)
     
-	String internalUserID = RandomStringUtils.randomAlphanumeric(12).toLowerCase()
+    String internalUserID = RandomStringUtils.randomAlphanumeric(12).toLowerCase()
 	
     String externUserID = params.userID
     if (StringUtils.isEmpty(externUserID)) {
-      externUserID = internalUserID
+        externUserID = internalUserID
     }
 	
-	//Return a Map with the user custom data
-	Map<String,String> userCustomData = paramsProcessorUtil.getUserCustomData(params);
-	//Currently, it's associated with the externalUserID
-	if(userCustomData.size()>0)
-		meetingService.addUserCustomData(meeting.getInternalId(),externUserID,userCustomData);
-    
-	String configxml = null;
-	
-	if (! StringUtils.isEmpty(params.configToken)) {
-		Config conf = meeting.getConfig(params.configToken);
-		if (conf == null) {
-			errors.noConfigFoundForToken(params.configToken);
-			respondWithErrors(errors);
-		} else {
-			configxml = conf.config;
-			println ("USING PREFERRED CONFIG")
-		}
-	} else {
-		Config conf = meeting.getDefaultConfig();
-		if (conf == null) {
-			errors.noConfigFound();
-			respondWithErrors(errors);
-		} else {
-			configxml = conf.config;
-			println ("USING DEFAULT CONFIG")
-		}
-	}
-	
-	if (StringUtils.isEmpty(configxml)) {
-		errors.noConfigFound();
-		respondWithErrors(errors);
-	}
-	
-	UserSession us = new UserSession();
-	us.internalUserId = internalUserID
+    String pin = meetingService.getAvailablePin();
+    //Return a Map with the user custom data
+    Map<String,String> userCustomData = paramsProcessorUtil.getUserCustomData(params);
+    //Currently, it's associated with the externalUserID
+    if(userCustomData.size()>0) {
+            meetingService.addUserCustomData(meeting.getInternalId(),externUserID,userCustomData);
+    }
+
+    String configxml = null;
+
+    if (! StringUtils.isEmpty(params.configToken)) {
+            Config conf = meeting.getConfig(params.configToken);
+            if (conf == null) {
+                    errors.noConfigFoundForToken(params.configToken);
+                    respondWithErrors(errors);
+            } else {
+                    configxml = conf.config;
+                    println ("USING PREFERRED CONFIG")
+            }
+    } else {
+            Config conf = meeting.getDefaultConfig();
+            if (conf == null) {
+                    errors.noConfigFound();
+                    respondWithErrors(errors);
+            } else {
+                    configxml = conf.config;
+                    println ("USING DEFAULT CONFIG")
+            }
+    }
+
+    if (StringUtils.isEmpty(configxml)) {
+            errors.noConfigFound();
+            respondWithErrors(errors);
+    }
+
+    UserSession us = new UserSession();
+    us.internalUserId = internalUserID
     us.conferencename = meeting.getName()
     us.meetingID = meeting.getInternalId()
 	us.externMeetingID = meeting.getExternalId()
@@ -349,12 +353,13 @@ class ApiController {
     us.mode = "LIVE"
     us.record = meeting.isRecord()
     us.welcome = meeting.getWelcomeMessage()
-	us.logoutUrl = meeting.getLogoutUrl();
-	us.configXML = configxml;
-			
-	if (! StringUtils.isEmpty(params.defaultLayout)) {
-		us.defaultLayout = params.defaultLayout;
-	}
+    us.logoutUrl = meeting.getLogoutUrl();
+    us.configXML = configxml;
+    us.pin = pin;
+
+    if (! StringUtils.isEmpty(params.defaultLayout)) {
+            us.defaultLayout = params.defaultLayout;
+    }
 
     if (! StringUtils.isEmpty(params.avatarURL)) {
         us.avatarURL = params.avatarURL;
@@ -362,15 +367,15 @@ class ApiController {
         us.avatarURL = meeting.defaultAvatarURL
     }
     	     
-	// Store the following into a session so we can handle
-	// logout, restarts properly.
-	session['meeting-id'] = us.meetingID
-	session['user-token'] = us.meetingID + "-" + us.internalUserId;
-	session['logout-url'] = us.logoutUrl
-	
-	meetingService.addUserSession(session['user-token'], us);
-	
-	log.info("Session user token for " + us.fullname + " [" + session['user-token'] + "]")	
+    // Store the following into a session so we can handle
+    // logout, restarts properly.
+    session['meeting-id'] = us.meetingID
+    session['user-token'] = us.meetingID + "-" + us.internalUserId;
+    session['logout-url'] = us.logoutUrl
+
+    meetingService.addUserSession(session['user-token'], us);
+
+    log.info("Session user token for " + us.fullname + " [" + session['user-token'] + "]")	
     session.setMaxInactiveInterval(SESSION_TIMEOUT);
     
 	//check if exists the param redirect
@@ -395,7 +400,7 @@ class ApiController {
 		log.info("Successfully joined. Redirecting to ${paramsProcessorUtil.getDefaultClientUrl()}"); 		
 		redirect(url: clientURL);
 	}
-	else{
+	else {
 		log.info("Successfully joined. Sending XML response.");
 		response.addHeader("Cache-Control", "no-cache")
 		withFormat {
@@ -585,6 +590,89 @@ class ApiController {
     }
   }
 
+  /*****************************************
+   * GETATTENDEE API
+   *****************************************/
+  def getAttendee = {
+        String API_CALL = "getAttendee"
+        log.debug CONTROLLER_NAME + "#${API_CALL}"
+
+        ApiErrors errors = new ApiErrors()
+        
+        // Do we have a checksum? If not, complain.
+        if (StringUtils.isEmpty(params.checksum)) {
+          errors.missingParamError("checksum");
+        }
+
+        // Do we have a pin? If not, complain.
+        String pin = params.pin
+        if (StringUtils.isEmpty(pin)) {
+          errors.missingParamError("pin");
+        }
+
+        if (errors.hasErrors()) {
+            respondWithErrors(errors)
+            return
+        }
+
+        // Do we agree on the checksum? If not, complain.		
+        if (! paramsProcessorUtil.isChecksumSame(API_CALL, params.checksum, request.getQueryString())) {
+            errors.checksumError()
+            respondWithErrors(errors)
+            return
+        } 
+        
+        ConcurrentMap<String, UserSession> sessions = meetingService.getUserSessions();
+        UserSession us = null
+        for (UserSession user : sessions.values()) {
+            if(user.pin == pin) {
+                us = user
+            }
+        }
+        
+        if (us == null) {
+                  // MT: Is this really needed?
+                  // BEGIN - backward compatibility
+                  invalid("notFound", "We could not find a attendee for that pin");
+                  return;
+                  // END - backward compatibility
+
+
+            errors.invalidPinError();
+            respondWithErrors(errors)
+            return;
+        } 
+
+        response.addHeader("Cache-Control", "no-cache")
+        withFormat {        
+            xml {
+              render(contentType:"text/xml") {
+                response() {
+                  returncode("SUCCESS")
+                  fullname(us.fullname)
+                  confname(us.conferencename)
+                  meetingID(us.meetingID)
+                  externMeetingID(us.externMeetingID)
+                  externUserID(us.externUserID)
+                  internalUserID(us.internalUserId)
+                  role(us.role)
+                  conference(us.conference)
+                  room(us.room)
+                  voicebridge(us.voicebridge)
+                  webvoiceconf(us.webvoiceconf)
+                  mode(us.mode)
+                  record(us.record)
+                  welcome(us.welcome)
+                  logoutUrl(us.logoutUrl)
+                  defaultLayout(us.defaultLayout)
+                  avatarURL(us.avatarURL)
+                  pin(us.pin)
+                }
+              }
+            }
+          }
+  }
+    
   /*****************************************
    * GETMEETINGINFO API
    *****************************************/
@@ -1046,6 +1134,7 @@ class ApiController {
 	if (session["user-token"] && (meetingService.getUserSession(session['user-token']) != null)) {
 		  log.info("Found session for user in conference.")
 		  UserSession us = meetingService.removeUserSession(session['user-token']);
+                  meetingService.addAvailablePin(us.pin);
 		  meeting = meetingService.getMeeting(us.meetingID);
 	}
 		  

@@ -41,6 +41,8 @@ public class MeetingService {
 	
 	private final ConcurrentMap<String, Meeting> meetings;	
 	private final ConcurrentMap<String, UserSession> sessions;
+        private final List<String> availablePins;
+        private final int defaultPinLength = 5; // @TODO: make this configurable
 	
 	
 	private int defaultMeetingExpireDuration = 1;	
@@ -53,9 +55,22 @@ public class MeetingService {
 	public MeetingService() {
 		meetings = new ConcurrentHashMap<String, Meeting>();	
 		sessions = new ConcurrentHashMap<String, UserSession>();
-		
+                availablePins = Collections.<String>emptyList();
+                
+                for (int i = 0; i < Math.pow(10, defaultPinLength); i++) {
+                    String pin = String.valueOf(i);
+                    while(pin.length() < defaultPinLength) {
+                        // Add leading zeros
+                        pin = "0" + pin;
+                    }
+                    availablePins.add(pin);
+                }	
 	}
 	
+        public ConcurrentMap<String, UserSession> getUserSessions() {
+                return sessions;
+        }
+        
 	public void addUserSession(String token, UserSession user) {
 		sessions.put(token, user);
 	}
@@ -260,7 +275,23 @@ public class MeetingService {
 		cleaner.setMeetingService(this);
 		cleaner.start();
 	}
+        
+        public String getAvailablePin() {
+            if(availablePins.isEmpty()){
+                log.warn("No pin available - return empty string. Assign phone user will be impossible.");
+                return "";
+            } 
+            String pin = availablePins.get(0);
+            availablePins.remove(pin);
+            return pin;
+        }
 	
+        public void addAvailablePin(String pin) {
+            if(pin.length() == defaultPinLength){
+                availablePins.add(pin);
+            }
+        }
+        
 	/**
 	 * Class that listens for messages from bbb-apps.
 	 * @author Richard Alam

@@ -48,6 +48,10 @@ public class ApiErrors {
 		errors.add(new String[] {"invalidPassword", "The password you submitted is not valid."});
 	}
 	
+	public void invalidPinError() {
+		errors.add(new String[] {"invalidPassword", "The pin you submitted is not valid."});
+	}
+	
 	public void mismatchCreateTimeParam() {
 		errors.add(new String[] {"mismatchCreateTime", "The createTime parameter submitted mismatches with the current meeting."});
 	}
