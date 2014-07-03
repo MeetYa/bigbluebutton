@@ -606,8 +606,8 @@ class ApiController {
         }
 
         // Do we have a pin? If not, complain.
-        String pin = params.pin
-        if (StringUtils.isEmpty(pin)) {
+        String phonePin = params.pin
+        if (StringUtils.isEmpty(phonePin)) {
           errors.missingParamError("pin");
         }
 
