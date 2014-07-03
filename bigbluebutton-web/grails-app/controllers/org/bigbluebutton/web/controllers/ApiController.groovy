@@ -410,6 +410,7 @@ class ApiController {
 				returncode(RESP_CODE_SUCCESS)
 				messageKey("successfullyJoined")
 				message("You have joined successfully.")
+                                pin(us.pin)
 			  }
 			}
 		  }
