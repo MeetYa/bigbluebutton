@@ -303,7 +303,7 @@ class ApiController {
         externUserID = internalUserID
     }
 	
-    String pin = meetingService.getAvailablePin();
+    String phonePin = meetingService.getAvailablePin();
     //Return a Map with the user custom data
     Map<String,String> userCustomData = paramsProcessorUtil.getUserCustomData(params);
     //Currently, it's associated with the externalUserID
@@ -355,7 +355,7 @@ class ApiController {
     us.welcome = meeting.getWelcomeMessage()
     us.logoutUrl = meeting.getLogoutUrl();
     us.configXML = configxml;
-    us.pin = pin;
+    us.pin = phonePin;
 
     if (! StringUtils.isEmpty(params.defaultLayout)) {
             us.defaultLayout = params.defaultLayout;
