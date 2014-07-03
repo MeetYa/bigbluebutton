@@ -41,7 +41,7 @@ public class MeetingService {
 	
 	private final ConcurrentMap<String, Meeting> meetings;	
 	private final ConcurrentMap<String, UserSession> sessions;
-        private final List<String> availablePins;
+        private final ArrayList<String> availablePins;
         private final int defaultPinLength = 5; // @TODO: make this configurable
 	
 	
@@ -55,7 +55,7 @@ public class MeetingService {
 	public MeetingService() {
 		meetings = new ConcurrentHashMap<String, Meeting>();	
 		sessions = new ConcurrentHashMap<String, UserSession>();
-                availablePins = Collections.<String>emptyList();
+                availablePins = new ArrayList<String>();
                 
                 for (int i = 0; i < Math.pow(10, defaultPinLength); i++) {
                     String pin = String.valueOf(i);
