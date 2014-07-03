@@ -281,6 +281,7 @@ public class MeetingService {
                 log.warn("No pin available - return empty string. Assign phone user will be impossible.");
                 return "";
             } 
+            Collections.shuffle(availablePins);
             String pin = availablePins.get(0);
             availablePins.remove(pin);
             return pin;
